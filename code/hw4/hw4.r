@@ -1,0 +1,152 @@
+# 1. This problem uses the water data set in the alr4 package. For this problem, consider the regression problem with response BSAAM, and three predictors as regressors given by OPBPC, OPRC, and OPSLAKE.
+
+library(alr4)
+library(dplyr)
+
+## (a) Examine the scatterplot matrix drawn for these three regressors and the response. What should the correlation matrix look like (i.e., which correlations are large and positive, which are large and negative, and which are small)? Compute the correlation matrix to verify your results. (Hint: the R function cor() can be used to compute a correlation matrix.)
+
+data <- select(water, OPBPC, OPRC, OPSLAKE, BSAAM)
+
+pairs(data)
+
+### It appears from the scatterplot matrix that the response variables have a positive linear relationship with the response BSAAM. There is also a single peculiar outlier present in most of the plots.
+
+cor(data)
+
+### The correlation matrix supports the observation made prior, and displays a strong positive linear relationship between the variables.
+
+## (b) Get the regression summary for the regression of BSAAM on these three regressors. Include OPBPC, OPRC, and OPSLAKE sequentially. Explain what the "Pr(> |t|)" column of your output means. 
+
+model <- lm(BSAAM ~ OPBPC + OPRC + OPSLAKE, data=data)
+
+summary(model)
+
+### The "Pr(> |t|)" column of the regression summary contains the probability of observing a value larger than the absolute value of the test statistic t, which measures how many standard deviations away from 0 the coefficient is. A value smaller than the chosen significance level in this column means that we can reject the null hypothesis that the coefficient in question's true value is 0, or that there is no linear relationship between the variable and the response.
+
+## (c) Use R to produce an ANOVA table for this regression ???t. What is SSR(OPSLAKE|OPBPC,OPRC)? What is SSE(OPBPC,OPRC)?
+
+aov.result <- anova(model)
+format(aov.result, scientific=FALSE)
+
+model2 <- model <- lm(BSAAM ~ OPBPC + OPRC, data=data)
+
+aov.resultwo <- anova(model2)
+format(aov.resultwo, scientific=FALSE)
+
+cat("SSR(OPSLAKE|OPBPC, OPRC) =", aov.result$`Sum Sq`[3], "      SSE(OPBPC,OPRC) =", aov.resultwo$`Sum Sq`[3])
+
+
+# 2. The lathe1 data set from the alr4 package contains the results of an experiment on characterizing the life of a drill bit in cutting steel on a lathe. Two factors were varied in the experiment, Speed and Feed rate. The response is Life, the total time until the drill bit fails, in minutes. The values of Speed and Feed in the data have been coded by computing.
+
+library(MASS)
+
+## (a)  Starting with the full second-order model 
+
+## E(Life | Speed, Feed) = B0 + B1*Speed + B2*Feed + B11*Speed^2 + B22*Feed^2 + B12*Speed*Feed 
+
+## Use the Box-Cox method to show that an appropriate scale for the response is the logarithmic scale.
+
+model <- lm(Life ~ Speed + Feed +Speed^2 + Feed^2 + Speed*Feed, data=lathe1)
+boxcox(model)
+
+### The value of lambda is near 0, therefore a log(y) transformation is necessary.
+
+## (b) State the null and alternative hypotheses for the overall F-test for this model using log(Life) as the response. Perform the test and summarize results.
+
+### Ho : The fit of the reduced model and the full model are equal
+### Ha : The fit of the reduced model is significantly worse than the full model
+
+full <- lm(log(Life) ~ Speed + Feed +Speed^2 + Feed^2 + Speed*Feed, data=lathe1)
+reduced <- lm(log(Life) ~ 1, data=lathe1)
+
+format(anova(full, reduced), scientific=FALSE)
+
+### The p-value from the F test is extremely small, therefore we reject the null hypothesis that the fit of the reduced intercept-only model and the full model are equal.
+
+## (c) Explain the practical meaning of the hypothesis H0 : B1 = B11 = B12 = 0 in the context of the above model.
+
+### This null hypothesis implies that the Speed predictor has no linear relationship with the response, and adds no predictive power.
+
+## (d) Perform a test for the hypothesis in part (c) and summarize your results.
+
+### Ho : B1 = B11 = B12 = 0
+### Ha : B1 or B11 or B12 != 0
+
+reduced <- lm(log(Life) ~ Feed + Feed^2, data=lathe1)
+
+format(anova(full, reduced), scientific=FALSE)
+
+### The p-value from the F test is extremely small, therefore we reject the null hypothesis that the fit of the reduced model and the full model are equal.
+
+# 3. Consider the following model and the corresponding ANOVA table: Y = B0 + B1*X1 + B2*X2 + epsilon, where r squared = 0.637
+
+## (a) Fill in the missing values (denoted by *) in the ANOVA table.
+
+### DF for the model is is 2, as there are two independent variables (X1, X2). Thus, the C total DF = 119, and n = 120.
+
+### R^2 = 1 - SSE/SST. We know that SSE is 17.90761, and R^2 is 0.637, therefore plugging in the numbers, SST = 49.33226.
+
+### SS model = SS - SSE, thus, SS for model = 31.42465.
+
+### MS = SSM/DF, thus, MS for model = 15.712325
+
+### F = model MS / MSE, thus, F statistic = 102.6537
+
+## (b) State the null and alternative hypothesis for the "F-test" in the ANOVA table.
+
+### Ho : B1 = B2 = 0
+### Ha : B1 or B2 != 0
+
+## (c) What is the estimated value of ??2 based on then results shown in the table?
+
+### The estimated population variance is equivalent to the MSE, so 0.15306
+
+# 4. A psychologist made a small scale study to examine the nature of the relation between an employee's emotional stability (Y) and the employee's ability to perform in a task group (X). Emotional stability was measured by a written test and ability to perform in a task group (X = 1 if able, X = 0 if unable) was evaluated by the supervisor. The results were as follows:
+
+y <- c(474, 619, 584, 638, 399, 481, 624, 582)
+x <- c(0, 1, 0, 1, 0, 1, 1, 1)
+
+## (a) Fit a linear regression and write down the ???tted model.
+
+model <- lm(y ~ x)
+summary(model)
+
+## (b) Write down separate estimated regression equations for "able" employees and "unable" employees.
+
+able <- 485.6667 + 1*103.1333
+able
+unable <- 485.6667 + 0*103.1333
+unable
+
+## (c) Is there a linear relationship between X and Y ? Test at 5% level.
+
+summary(model)
+
+### The p-value is greater than the significance level alpha, therefore we fail to reject the null hypothesis that there is no lienar relationship between X and Y.
+
+# 5. A marketing research trainee in the national office of a chain of shoe stores used the following response function to study seasonal (winter, spring, fall, summer) effects on sales of a certain line of shoes: E(Y) = B0 + B1*X1 + B2*X2 + B3*X3. The X's are one hot encoded categorical variables (in the order listed) for the seasons.
+
+## (a) State the response functions for the four types of seasons.
+
+## (c) Interpret each of the following quantities: (i) B0 (ii) B1 (iii) B2 (iv) B3
+
+### (i) This is the amount of sales during the summer.
+
+### (ii) This is the estimated difference in sales between the winter and summer (positive if winter is more, negative if it's less)
+
+### (iii) This is the estimated difference in sales between the spring and summer (positive if spring is more, negative if it's less)
+
+### (iv) This is the estimated difference in sales between the fall and summer (positive if fall is more, negative if it's less)
+
+
+
+
+
+
+
+
+
+
+
+
+

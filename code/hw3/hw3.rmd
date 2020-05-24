@@ -105,23 +105,23 @@ abline(lm(trade.union$wage~trade.union$age))
 
 ## (b) Determine a transformation on the response wage to facilitate linear modeling with age and union membership as predictors.
 ```{r}
-untransformed <- lm(trade.union$wage ~ trade.union$age + trade.union$union.member)
+untransformed <- trade.union$wage
 
-qqnorm(untransformed$residuals)
-qqline(untransformed$residuals, col="red")
+qqnorm(untransformed)
+qqline(untransformed, col="red")
 ```
-The points on the Q-Q plot deviate far from the reference line, therefore the normality assumption doesn't hold and a linear regression would not give interpretable results. A transformation on our response variable here could greatly increase a linear model's effectiveness.
+The points on the Q-Q plot deviate far from the reference line, therefore the normality assumption doesn't hold for the response and a linear regression would not give interpretable results. A transformation on our response variable to normalize it could allow us to use a linear regression for analysis.
 ```{r}
-transformed <- lm(log(trade.union$wage) ~ trade.union$age + trade.union$union.member)
+transformed <- log(trade.union$wage)
 
-qqnorm(transformed$residuals)
-qqline(transformed$residuals, col="red")
+qqnorm(transformed)
+qqline(transformed, col="red")
 ```
-The plot when wage is transformed with a natural logarithm shows a massive improvement from the previous one. The points hug the reference line, letting us assume normality. Thus, this transformation will improve our results when fitting a regression line.
+The plot when wage is transformed with a natural logarithm shows a substantial improvement from the previous one. The points hug the reference line except for some outliers on the tails, letting us assume normality for our response. Thus, this transformation will improve our results when fitting a regression line.
 
 ## (c) Fit a linear model regressing transformed wage on age and union membership. What is the relationship of age and union membership to wage?
 ```{r}
-model <- transformed
+model <- lm(log(trade.union$wage) ~ trade.union$age + trade.union$union.member)
 
 plot(trade.union$age, log(trade.union$wage), 
      col=trade.union$union.member+1, pch=16,
